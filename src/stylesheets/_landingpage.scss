@@ -1,0 +1,29 @@
+@import 'layout';
+@import 'colors';
+@import 'fonts';
+
+.block {
+  @include eight-column-layout-margin;
+}
+
+.helper-description {
+  @include eight-column-layout-margin;
+  padding-top: 32px;
+  margin-top: 24px;
+
+  p {
+    font-weight: bold;
+    margin: 0;
+  }
+
+  .loader-text {
+    display: none;
+    text-align: center;
+    &__title {
+      display: inline-block;
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+  }
+}

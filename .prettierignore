@@ -1,0 +1,7 @@
+LICENSE.md
+coverage/
+dist/
+node_modules/
+.vscode/
+.idea/
+spec/end_to_end_tests/reports
