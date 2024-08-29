@@ -102,21 +102,17 @@ const plotRadarGraph = function (title, blips, currentRadarName, alternativeRada
 
   d3.selectAll('.loading').remove()
 
-  // console.log('blips', blips)
-
-  const ringMap = blips.reduce((allBlips, { ring, ru }, index) => {
+  const ringMap = blips.reduce((allBlips, { quadrant, ring, ru }, index) => {
     if (!allBlips[ring]) {
       allBlips[ring] = new Ring(ring, index);
     }
 
     if (ru) {
-      allBlips[ring].addRu();
+      allBlips[ring].addRu(quadrant);
     }
 
     return allBlips;
   }, {});
-
-  // console.log('ringMap', ringMap)
 
   const quadrantsMap = blips.reduce((allQuadrants, { quadrant }) => {
     allQuadrants[quadrant] = new Quadrant(quadrant)
@@ -272,7 +268,7 @@ const JSONFile = function (url) {
     d3.json(url)
       .then(createBlips)
       .catch((exception) => {
-        const fileNotFoundError = new FileNotFoundError(`Oops! We can't find the JSON file you've entered`)
+        const fileNotFoundError = new FileNotFoundError(`Ошибка загрузки радара`)
         plotErrorMessage(featureToggles.UIRefresh2022 ? fileNotFoundError : exception, 'json')
       })
   }
@@ -309,7 +305,7 @@ const ApiData = function (id) {
     api.get(`/radar/${id}`)
       .then(data => createBlips(data))
       .catch((exception) => {
-        const fileNotFoundError = new FileNotFoundError(`Oops! We can't find the JSON file you've entered`)
+        const fileNotFoundError = new FileNotFoundError(`Ошибка загрузки радара`)
         plotErrorMessage(featureToggles.UIRefresh2022 ? fileNotFoundError : exception, 'json')
       })
   }

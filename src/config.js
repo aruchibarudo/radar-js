@@ -1,5 +1,5 @@
 const config = () => {
-  const minRuRadars = process.env.MIN_RU_RADARS ?? 25;
+  const minRuRadars = process.env.MIN_RU_RADARS ?? 10;
 
   const env = {
     production: {
