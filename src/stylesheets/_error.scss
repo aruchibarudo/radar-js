@@ -10,17 +10,11 @@
   }
 
   .error-container__message {
-    @if not $UIRefresh2022 {
-      width: 60%;
-      display: inline-block;
+    p:first-child {
+      color: $error-text;
     }
-    @if $UIRefresh2022 {
-      p:first-child {
-        color: $error-text;
-      }
-      p {
-        margin: 0;
-      }
+    p {
+      margin: 0;
     }
   }
 

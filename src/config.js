@@ -8,9 +8,6 @@ const config = () => {
         token: process.env.API_AUTH_TOKEN,
       },
       minRuRadars,
-      featureToggles: {
-        UIRefresh2022: true,
-      },
     },
     development: {
       api: {
@@ -18,9 +15,6 @@ const config = () => {
         token: process.env.API_AUTH_TOKEN,
       },
       minRuRadars,
-      featureToggles: {
-        UIRefresh2022: true,
-      },
     },
   }
   return process.env.ENVIRONMENT ? env[process.env.ENVIRONMENT] : env

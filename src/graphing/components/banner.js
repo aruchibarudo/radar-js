@@ -1,8 +1,6 @@
 const d3 = require('d3')
 
-const config = require('../../config')
 const { addPdfCoverTitle } = require('../pdfPage')
-const featureToggles = config().featureToggles
 
 function renderBanner(renderFullRadar) {
   const documentTitle = document.title[0].toUpperCase() + document.title.slice(1)

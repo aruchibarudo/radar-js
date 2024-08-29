@@ -1,7 +1,5 @@
 const api = require('../../services/api');
 const d3 = require('d3')
-const config = require('../../config')
-const featureToggles = config().featureToggles
 
 const container = d3.select('#content');
 
@@ -16,10 +14,6 @@ const renderRadarsList = (radars) => {
 };
 
 const renderRadars = async () => {
-  if (!featureToggles.UIRefresh2022) {
-    return;
-  }
-
   container.append('h2').text('Доступные радары');
 
   try {

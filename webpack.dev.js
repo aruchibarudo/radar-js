@@ -7,11 +7,9 @@ const postcssPresetEnv = require('postcss-preset-env')
 const cssnano = require('cssnano')
 
 const common = require('./webpack.common.js')
-const config = require('./src/config')
 const { graphConfig, uiConfig } = require('./src/graphing/config')
 const fs = require('fs')
 
-const featureToggles = config().development.featureToggles
 const main = ['./src/site.js']
 const scssVariables = []
 
@@ -23,10 +21,6 @@ Object.entries(graphConfig).forEach(function ([key, value]) {
 
 Object.entries(uiConfig).forEach(function ([key, value]) {
   scssVariables.push(`$${key}: ${value}px;`)
-})
-
-Object.entries(featureToggles).forEach(function ([key, value]) {
-  scssVariables.push(`$${key}: ${value};`)
 })
 
 module.exports = merge(common, {
