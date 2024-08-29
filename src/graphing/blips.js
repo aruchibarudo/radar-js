@@ -184,23 +184,19 @@ function drawBlipCircle(group, blip, xValue, yValue, order) {
     .attr('transform', `scale(1) translate(${xValue - 16}, ${yValue - 16})`)
     .attr('aria-label', blipAssistiveText(blip))
 
-  // @todo: refactor this icon rendering logic & move to utils
-  const isRu = blip.isRu()
-  const isFttMatches = blip.getProbationResult() === 'ftt_matches'
-  const isFttNotMatches = blip.getProbationResult() === 'ftt_not_matches'
+  const isRu = blip.isRu();
+  const probationResult = blip.getProbationResult();
 
-  let iconSvg;
-  if (!isRu && isFttNotMatches) {
-    iconSvg = notRuNoFttIcon;
-  } else if (!isRu && isFttMatches) {
-    iconSvg = notRuHasFttIcon;
-  } else if (isRu && isFttNotMatches) {
-    iconSvg = ruNoFttIcon;
-  } else if (isRu && isFttMatches) {
-    iconSvg = ruFttIcon;
-  } else {
-    iconSvg = defaultIcon;
-  }
+  const iconMap = {
+    'false-ftt_not_matches': notRuNoFttIcon,
+    'false-ftt_matches': notRuHasFttIcon,
+    'true-ftt_not_matches': ruNoFttIcon,
+    'true-ftt_matches': ruFttIcon,
+  };
+
+  const key = `${isRu}-${probationResult}`;
+
+  const iconSvg = iconMap[key] || defaultIcon;
 
   const appendedGroup = group
     .append('g')
