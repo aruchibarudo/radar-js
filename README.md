@@ -12,24 +12,11 @@ cp .env.example .env.production
 
 ### 2. Configure the Environment Variables
 
-#### `.env.development`
-
-```ini
-API_BASE_URL=https://localhost:8080/api/v1
-PORT=8000
-CERT_PATH=./cert.pem
-KEY_PATH=./key.pem
-```
-
 - `API_BASE_URL`: The URL of your backend API for development
+- `API_AUTH_TOKEN`: Auth bearer token in the `Authorization` header
+- `MIN_RU_RADARS`: Minimum number of Russian radars to be highlighted in a quadrant
 - `PORT`: Port for the Webpack Dev Server
 - `CERT_PATH` and `KEY_PATH`: Paths to your SSL certificate and key for HTTPS development
-
-#### `.env.production`
-
-```ini
-API_BASE_URL=https://your-production-api.com/api/v1
-```
 
 ### 3. Generate locally-trusted development certificates
 Using this [instruction](https://github.com/FiloSottile/mkcert)

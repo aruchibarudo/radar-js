@@ -10,6 +10,7 @@ const {
   getScale,
   uiConfig,
 } = require('../config')
+const config = require('../../config')
 const ruIcon = require('!!raw-loader!../../images/blips/frame3.inline.svg').default;
 const notRuIcon = require('!!raw-loader!../../images/blips/frame4.inline.svg').default;
 const notRuFttIcon = require('!!raw-loader!../../images/blips/frame2.inline.svg').default;
@@ -19,7 +20,7 @@ const ruNoFttIcon = require('!!raw-loader!../../images/blips/frame7.inline.svg')
 const defaultIcon = require('!!raw-loader!../../images/blips/frame1.inline.svg').default;
 
 const ANIMATION_DURATION = 1000
-const MIN_RU_FOR_HIGHLIGHT = 30
+const MIN_HIGHLIGHTED_RU_RADARS = config().minRuRadars
 
 const { quadrantHeight, quadrantWidth, quadrantsGap, effectiveQuadrantWidth } = graphConfig
 
@@ -376,7 +377,7 @@ function renderRadarQuadrants(size, svg, quadrant, rings, ringCalculator, tip) {
       .startAngle(toRadian(quadrant.startAngle))
       .endAngle(toRadian(quadrant.startAngle - 90))
 
-    const highlightClass = ring.totalRu > MIN_RU_FOR_HIGHLIGHT ? 'highlight' : ''
+    const highlightClass = ring.totalRu > MIN_HIGHLIGHTED_RU_RADARS ? 'highlight' : ''
 
     quadrantGroup
       .append('path')
@@ -629,8 +630,6 @@ module.exports = {
   renderRadarQuadrants,
   renderRadarLegends,
   renderMobileView,
-  mouseoverQuadrant,
-  mouseoutQuadrant,
   stickQuadrantOnScroll,
   removeScrollListener,
   wrapQuadrantNameInMultiLine,

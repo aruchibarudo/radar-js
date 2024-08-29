@@ -2,13 +2,15 @@ const { objectToQueryString } = require('../util/urlUtils')
 const { generateErrorResponse } = require('../util/apiUtils')
 
 const config = require('../config')
-const apiBaseUrl = config().apiBaseUrl
+const apiBaseUrl = config().api.baseUrl
+const token = config().api.token
 
 async function request(url, params, method = 'GET') {
   const options = {
     method,
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
     }
   };
 
