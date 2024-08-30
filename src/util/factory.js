@@ -19,76 +19,12 @@ const ContentValidator = require('./contentValidator')
 const Sheet = require('./sheet')
 const ExceptionMessages = require('./exceptionMessages')
 const GoogleAuth = require('./googleAuth')
-const config = require('../config')
-const featureToggles = config().featureToggles
 const { getDocumentOrSheetId, getRadarId, getSheetName } = require('./urlUtils')
-const { getGraphSize, graphConfig, isValidConfig } = require('../graphing/config')
+const { getGraphSize, isValidConfig } = require('../graphing/config')
 const InvalidConfigError = require('../exceptions/invalidConfigError')
 const InvalidContentError = require('../exceptions/invalidContentError')
 const FileNotFoundError = require('../exceptions/fileNotFoundError')
 const { renderRadars } = require('../graphing/components/radarsList')
-const plotRadar = function (title, blips, currentRadarName, alternativeRadars) {
-  if (title.endsWith('.csv')) {
-    title = title.substring(0, title.length - 4)
-  }
-  if (title.endsWith('.json')) {
-    title = title.substring(0, title.length - 5)
-  }
-  document.title = title
-  d3.selectAll('.loading').remove()
-
-  var rings = _.map(_.uniqBy(blips, 'ring'), 'ring')
-  var ringMap = {}
-  var maxRings = 4
-
-  _.each(rings, function (ringName, i) {
-    if (i === maxRings) {
-      throw new MalformedDataError(ExceptionMessages.TOO_MANY_RINGS)
-    }
-    ringMap[ringName] = new Ring(ringName, i)
-  })
-
-  var quadrants = {}
-  _.each(blips, function (blip) {
-    if (!quadrants[blip.quadrant]) {
-      quadrants[blip.quadrant] = new Quadrant(blip.quadrant[0].toUpperCase() + blip.quadrant.slice(1))
-    }
-    quadrants[blip.quadrant].add(
-      new Blip({
-        name: blip.name,
-        ring: ringMap[blip.ring],
-        isNew: blip.isNew.toLowerCase() === 'true',
-        status: blip.status,
-        topic: blip.topic,
-        description: blip.description,
-        isRu: blip.ru,
-        probationResult: blip.probation_result,
-      }),
-    )
-  })
-
-  var radar = new Radar()
-  _.each(quadrants, function (quadrant) {
-    radar.addQuadrant(quadrant)
-  })
-
-  if (alternativeRadars !== undefined || true) {
-    alternativeRadars.forEach(function (sheetName) {
-      radar.addAlternative(sheetName)
-    })
-  }
-
-  if (currentRadarName !== undefined || true) {
-    radar.setCurrentSheet(currentRadarName)
-  }
-
-  const size = featureToggles.UIRefresh2022
-    ? getGraphSize()
-    : window.innerHeight - 133 < 620
-    ? 620
-    : window.innerHeight - 133
-  new GraphingRadar(size, radar).init().plot()
-}
 
 function validateInputQuadrantOrRingName(allQuadrantsOrRings, quadrantOrRing) {
   const quadrantOrRingNames = Object.keys(allQuadrantsOrRings)
@@ -102,21 +38,17 @@ const plotRadarGraph = function (title, blips, currentRadarName, alternativeRada
 
   d3.selectAll('.loading').remove()
 
-  // console.log('blips', blips)
-
-  const ringMap = blips.reduce((allBlips, { ring, ru }, index) => {
+  const ringMap = blips.reduce((allBlips, { quadrant, ring, ru }, index) => {
     if (!allBlips[ring]) {
       allBlips[ring] = new Ring(ring, index);
     }
 
     if (ru) {
-      allBlips[ring].addRu();
+      allBlips[ring].addRu(quadrant);
     }
 
     return allBlips;
   }, {});
-
-  // console.log('ringMap', ringMap)
 
   const quadrantsMap = blips.reduce((allQuadrants, { quadrant }) => {
     allQuadrants[quadrant] = new Quadrant(quadrant)
@@ -155,8 +87,7 @@ const plotRadarGraph = function (title, blips, currentRadarName, alternativeRada
 
   radar.setCurrentSheet(currentRadarName)
 
-  const graphSize = window.innerHeight - 133 < 620 ? 620 : window.innerHeight - 133
-  const size = featureToggles.UIRefresh2022 ? getGraphSize() : graphSize
+  const size = getGraphSize()
   new GraphingRadar(size, radar).init().plot()
 }
 
@@ -188,10 +119,7 @@ const GoogleSheet = function (sheetReference, sheetName) {
     const all = values
     const header = all.shift()
     var blips = _.map(all, (blip) => new InputSanitizer().sanitizeForProtectedSheet(blip, header))
-    const title = featureToggles.UIRefresh2022 ? documentTitle : documentTitle + ' - ' + sheetName
-    featureToggles.UIRefresh2022
-      ? plotRadarGraph(title, blips, sheetName, sheetNames)
-      : plotRadar(title, blips, sheetName, sheetNames)
+    plotRadarGraph(documentTitle, blips, sheetName, sheetNames)
   }
 
   self.authenticate = function (force = false, apiKeyEnabled, callback) {
@@ -234,9 +162,9 @@ const CSVDocument = function (url) {
   self.build = function () {
     d3.csv(url)
       .then(createBlips)
-      .catch((exception) => {
+      .catch(() => {
         const fileNotFoundError = new FileNotFoundError(`Oops! We can't find the CSV file you've entered`)
-        plotErrorMessage(featureToggles.UIRefresh2022 ? fileNotFoundError : exception, 'csv')
+        plotErrorMessage(fileNotFoundError, 'csv')
       })
   }
 
@@ -248,12 +176,10 @@ const CSVDocument = function (url) {
       contentValidator.verifyContent()
       contentValidator.verifyHeaders()
       var blips = _.map(data, new InputSanitizer().sanitize)
-      featureToggles.UIRefresh2022
-        ? plotRadarGraph(FileName(url), blips, 'CSV File', [])
-        : plotRadar(FileName(url), blips, 'CSV File', [])
+      plotRadarGraph(FileName(url), blips, 'CSV File', [])
     } catch (exception) {
       const invalidContentError = new InvalidContentError(ExceptionMessages.INVALID_CSV_CONTENT)
-      plotErrorMessage(featureToggles.UIRefresh2022 ? invalidContentError : exception, 'csv')
+      plotErrorMessage(invalidContentError, 'csv')
     }
   }
 
@@ -271,9 +197,9 @@ const JSONFile = function (url) {
   self.build = function () {
     d3.json(url)
       .then(createBlips)
-      .catch((exception) => {
-        const fileNotFoundError = new FileNotFoundError(`Oops! We can't find the JSON file you've entered`)
-        plotErrorMessage(featureToggles.UIRefresh2022 ? fileNotFoundError : exception, 'json')
+      .catch(() => {
+        const fileNotFoundError = new FileNotFoundError(`Ошибка загрузки радара`)
+        plotErrorMessage(fileNotFoundError, 'json')
       })
   }
 
@@ -285,12 +211,10 @@ const JSONFile = function (url) {
       contentValidator.verifyHeaders()
       var blips = _.map(data, new InputSanitizer().sanitize)
 
-      featureToggles.UIRefresh2022
-        ? plotRadarGraph(FileName(url), blips, 'JSON File', [])
-        : plotRadar(FileName(url), blips, 'JSON File', [])
+      plotRadarGraph(FileName(url), blips, 'JSON File', [])
     } catch (exception) {
       const invalidContentError = new InvalidContentError(ExceptionMessages.INVALID_JSON_CONTENT)
-      plotErrorMessage(featureToggles.UIRefresh2022 ? invalidContentError : exception, 'json')
+      plotErrorMessage(invalidContentError, 'json')
     }
   }
 
@@ -308,9 +232,9 @@ const ApiData = function (id) {
   self.build = function () {
     api.get(`/radar/${id}`)
       .then(data => createBlips(data))
-      .catch((exception) => {
-        const fileNotFoundError = new FileNotFoundError(`Oops! We can't find the JSON file you've entered`)
-        plotErrorMessage(featureToggles.UIRefresh2022 ? fileNotFoundError : exception, 'json')
+      .catch(() => {
+        const fileNotFoundError = new FileNotFoundError(`Ошибка загрузки радара`)
+        plotErrorMessage(fileNotFoundError, 'json')
       })
   }
 
@@ -322,12 +246,10 @@ const ApiData = function (id) {
       contentValidator.verifyHeaders()
       var blips = _.map(data.items, new InputSanitizer().sanitize)
 
-      featureToggles.UIRefresh2022
-        ? plotRadarGraph(data.name, blips, 'JSON Data', [])
-        : plotRadar(FileName(url), blips, 'JSON Data', [])
+      plotRadarGraph(data.name, blips, 'JSON Data', [])
     } catch (exception) {
       const invalidContentError = new InvalidContentError(ExceptionMessages.INVALID_JSON_CONTENT)
-      plotErrorMessage(featureToggles.UIRefresh2022 ? invalidContentError : exception, 'json')
+      plotErrorMessage(invalidContentError, 'json')
     }
   }
 
@@ -365,7 +287,7 @@ const Factory = function () {
     }
 
     window.addEventListener('keydown', function (e) {
-      if (featureToggles.UIRefresh2022 && e.key === '/') {
+      if (e.key === '/') {
         const inputElement =
           d3.select('input.search-container__input').node()
 
@@ -417,28 +339,12 @@ function plotLoading() {
   document.querySelector('.helper-description .loader-text').style.display = 'block'
 }
 
-function plotBanner(content, text) {
-  content.append('div').attr('class', 'input-sheet__banner').html(text)
-}
-
 function plotErrorMessage(exception, fileType) {
-  if (featureToggles.UIRefresh2022) {
-    showErrorMessage(exception, fileType)
-  }
+  showErrorMessage(exception, fileType)
 }
 
-function plotError(exception, fileType) {
-  let message
-  if (featureToggles.UIRefresh2022) {
-    message = exception.message
-  } else {
-    const fileTypes = { sheet: 'Google Sheet', json: 'JSON file', csv: 'CSV file' }
-    const file = fileTypes[fileType]
-    message = `Oops! We can't find the ${file} you've entered`
-    if (exception instanceof MalformedDataError) {
-      message = message.concat(exception.message)
-    }
-  }
+function plotError(exception) {
+  let message = exception.message
 
   d3.selectAll('.error-container__message').remove()
   const container = d3.select('#error-container')
@@ -448,13 +354,6 @@ function plotError(exception, fileType) {
   errorContainer.append('p').html(message)
 
   document.querySelector('.helper-description > p').style.display = 'block'
-
-  if (!featureToggles.UIRefresh2022) {
-    let homePageURL = window.location.protocol + '//' + window.location.hostname
-    homePageURL += window.location.port === '' ? '' : ':' + window.location.port
-    const homePage = '<a href=' + homePageURL + '>GO BACK</a>'
-    errorContainer.append('div').append('p').html(homePage)
-  }
 }
 
 function showErrorMessage(exception, fileType) {
@@ -463,23 +362,12 @@ function showErrorMessage(exception, fileType) {
 }
 
 function plotUnauthorizedErrorMessage() {
-  let content
+  let content = d3.select('main')
   const helperDescription = d3.select('.helper-description')
-  if (!featureToggles.UIRefresh2022) {
-    content = d3.select('body').append('div').attr('class', 'input-sheet')
-    setDocumentTitle()
+  helperDescription.style('display', 'none')
+  d3.selectAll('.loader-text').remove()
+  d3.selectAll('.error-container').remove()
 
-    const bannerText = '<div><h1>Радар ИТ инфраструктуры</h1></div>'
-
-    plotBanner(content, bannerText)
-
-    d3.selectAll('.loading').remove()
-  } else {
-    content = d3.select('main')
-    helperDescription.style('display', 'none')
-    d3.selectAll('.loader-text').remove()
-    d3.selectAll('.error-container').remove()
-  }
   const currentUser = GoogleAuth.getEmail()
   let homePageURL = window.location.protocol + '//' + window.location.hostname
   homePageURL += window.location.port === '' ? '' : ':' + window.location.port
@@ -491,7 +379,7 @@ function plotUnauthorizedErrorMessage() {
   const errorContainer = container.append('div').attr('class', 'error-container__message')
 
   errorContainer.append('div').append('p').attr('class', 'error-title').html(message)
-  const newUi = featureToggles.UIRefresh2022 ? 'switch-account-button-newui' : 'switch-account-button'
+  const newUi = 'switch-account-button-newui'
   const button = errorContainer.append('button').attr('class', `button ${newUi}`).text('Switch account')
 
   errorContainer
@@ -505,10 +393,10 @@ function plotUnauthorizedErrorMessage() {
     sheet = GoogleSheet(getDocumentOrSheetId(), getSheetName())
 
     sheet.authenticate(true, false, () => {
-      if (featureToggles.UIRefresh2022 && !sheet.error) {
+      if (!sheet.error) {
         helperDescription.style('display', 'block')
         errorContainer.remove()
-      } else if (featureToggles.UIRefresh2022 && sheet.error) {
+      } else if (sheet.error) {
         helperDescription.style('display', 'none')
       } else {
         content.remove()

@@ -10,6 +10,7 @@ const {
   getScale,
   uiConfig,
 } = require('../config')
+const config = require('../../config')
 const ruIcon = require('!!raw-loader!../../images/blips/frame3.inline.svg').default;
 const notRuIcon = require('!!raw-loader!../../images/blips/frame4.inline.svg').default;
 const notRuFttIcon = require('!!raw-loader!../../images/blips/frame2.inline.svg').default;
@@ -19,7 +20,7 @@ const ruNoFttIcon = require('!!raw-loader!../../images/blips/frame7.inline.svg')
 const defaultIcon = require('!!raw-loader!../../images/blips/frame1.inline.svg').default;
 
 const ANIMATION_DURATION = 1000
-const MIN_RU_FOR_HIGHLIGHT = 30
+const MIN_HIGHLIGHTED_RU_RADARS = parseInt(config().minRuRadars)
 
 const { quadrantHeight, quadrantWidth, quadrantsGap, effectiveQuadrantWidth } = graphConfig
 
@@ -329,7 +330,8 @@ function renderRadarQuadrantName(quadrant, parentGroup, tip) {
   ctaArrow.attr('transform', `translate(${ctaArrowXOffset}, ${ctaArrowYOffset})`)
 }
 
-function renderRadarQuadrants(size, svg, quadrant, rings, ringCalculator, tip) {
+function renderRadarQuadrants({ svg, quadrant, rings, ringCalculator, tip }) {
+  const quadrantName = quadrant.quadrant.name()
   const quadrantGroup = svg
     .append('g')
     .attr('class', 'quadrant-group quadrant-group-' + quadrant.order)
@@ -337,7 +339,7 @@ function renderRadarQuadrants(size, svg, quadrant, rings, ringCalculator, tip) {
     .on('mouseout', mouseoutQuadrant.bind({}, quadrant.order))
     .on('click', selectRadarQuadrant.bind({}, quadrant.order, quadrant.startAngle, quadrant.quadrant.name()))
     .on('keydown', function (e) {
-      if (e.key === 'Enter') selectRadarQuadrant(quadrant.order, quadrant.startAngle, quadrant.quadrant.name())
+      if (e.key === 'Enter') selectRadarQuadrant(quadrant.order, quadrant.startAngle, quadrantName)
     })
 
   const rectCoordMap = {
@@ -376,7 +378,7 @@ function renderRadarQuadrants(size, svg, quadrant, rings, ringCalculator, tip) {
       .startAngle(toRadian(quadrant.startAngle))
       .endAngle(toRadian(quadrant.startAngle - 90))
 
-    const highlightClass = ring.totalRu > MIN_RU_FOR_HIGHLIGHT ? 'highlight' : ''
+    const highlightClass = ring.totalRu[quadrantName] >= MIN_HIGHLIGHTED_RU_RADARS ? 'highlight' : ''
 
     quadrantGroup
       .append('path')
@@ -629,8 +631,6 @@ module.exports = {
   renderRadarQuadrants,
   renderRadarLegends,
   renderMobileView,
-  mouseoverQuadrant,
-  mouseoutQuadrant,
   stickQuadrantOnScroll,
   removeScrollListener,
   wrapQuadrantNameInMultiLine,

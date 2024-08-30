@@ -1,5 +1,5 @@
 const Ring = function (name, order) {
-  var self = { totalRu: 0 }
+  var self = { totalRu: {} }
 
   self.name = function () {
     return name
@@ -9,8 +9,12 @@ const Ring = function (name, order) {
     return order
   }
 
-  self.addRu = function () {
-    self.totalRu++
+  self.addRu = function (quadrant) {
+    if (!self.totalRu[quadrant]) {
+      self.totalRu[quadrant] = 0
+    }
+
+    self.totalRu[quadrant] += 1
   }
 
   return self

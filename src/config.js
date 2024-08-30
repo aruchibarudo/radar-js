@@ -1,16 +1,20 @@
 const config = () => {
+  const minRuRadars = process.env.MIN_RU_RADARS ?? 10;
+
   const env = {
     production: {
-      apiBaseUrl: process.env.API_BASE_URL,
-      featureToggles: {
-        UIRefresh2022: true,
+      api: {
+        baseUrl: process.env.API_BASE_URL,
+        token: process.env.API_AUTH_TOKEN,
       },
+      minRuRadars,
     },
     development: {
-      apiBaseUrl: process.env.API_BASE_URL,
-      featureToggles: {
-        UIRefresh2022: true,
+      api: {
+        baseUrl: process.env.API_BASE_URL,
+        token: process.env.API_AUTH_TOKEN,
       },
+      minRuRadars,
     },
   }
   return process.env.ENVIRONMENT ? env[process.env.ENVIRONMENT] : env
