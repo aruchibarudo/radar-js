@@ -1,6 +1,12 @@
 ## Development Setup
 
-### 1. Create Environment Files
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Create Environment Files
 
 ```bash
 # For development environment
@@ -10,7 +16,7 @@ cp .env.example .env.development
 cp .env.example .env.production
 ```
 
-### 2. Configure the Environment Variables
+### 3. Configure the Environment Variables
 
 - `API_BASE_URL`: The URL of your backend API for development
 - `API_AUTH_TOKEN`: Auth bearer token in the `Authorization` header
@@ -18,11 +24,11 @@ cp .env.example .env.production
 - `PORT`: Port for the Webpack Dev Server
 - `CERT_PATH` and `KEY_PATH`: Paths to your SSL certificate and key for HTTPS development
 
-### 3. Generate locally-trusted development certificates
+### 4. Generate locally-trusted development certificates
 Using this [instruction](https://github.com/FiloSottile/mkcert)
 
-### 4. Running the Application
+### 5. Running the Application
 `npm run dev`
 
-### 5. Build the Application
+### 6. Build the Application
 `npm run build:prod`
