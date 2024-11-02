@@ -1,5 +1,5 @@
 const Ring = function (name, order) {
-  var self = { totalRu: {} }
+  const self = { totalRu: {} }
 
   self.name = function () {
     return name

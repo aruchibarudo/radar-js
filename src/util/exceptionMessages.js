@@ -1,4 +1,5 @@
 const ExceptionMessages = {
+  NO_ITEMS: 'В радаре отсутствуют элементы. Добавьте их в админ панели',
   TOO_MANY_QUADRANTS: 'There are more than 4 quadrant names listed in your data. Check the quadrant column for errors.',
   TOO_MANY_RINGS: 'More than 4 rings.',
   MISSING_HEADERS:

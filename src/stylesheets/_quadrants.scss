@@ -111,22 +111,22 @@
     path {
       &.ring-arc-3 {
         stroke: none!important;
-        fill: $grey-light!important;;
+        fill: $grey-light!important;
       }
 
       &.ring-arc-2 {
         stroke: none!important;
-        fill: $grey!important;;
+        fill: $grey!important;
       }
 
       &.ring-arc-1 {
-        stroke: none!important;;
-        fill: $grey-dark!important;;
+        stroke: none!important;
+        fill: $grey-dark!important;
       }
 
       &.ring-arc-0 {
-        // stroke: none!important;;
-        // fill: $grey-darkest!important;;
+        stroke: none!important;
+        fill: $grey-darkest!important;
       }
     }
 
@@ -135,16 +135,92 @@
         stroke: var(--color-typo-secondary);
         stroke-width: 1;
         fill: white;
-
-        &.highlight {
-          fill: var(--color-bg-ghost);
-        }
       }
     }
 
     .quadrant-group {
       transition: opacity 0.5s ease-out;
       pointer-events: all;
+
+      &-first {
+        path {
+          &[class*="ring-arc-0"].highlight {
+            fill: rgba(0, 121, 194, 0.4) !important;
+          }
+
+          &[class*="ring-arc-1"].highlight {
+            fill: rgba(0, 121, 194, 0.3) !important;
+          }
+
+          &[class*="ring-arc-2"].highlight {
+            fill: rgba(0, 121, 194, 0.2) !important;
+          }
+
+          &[class*="ring-arc-3"].highlight {
+            fill: rgba(0, 121, 194, 0.1) !important;
+          }
+        }
+      }
+
+      &-second {
+        path {
+          &[class*="ring-arc-0"].highlight {
+            fill: rgba(232, 117, 2, 0.4) !important;
+          }
+
+          &[class*="ring-arc-1"].highlight {
+            fill: rgba(232, 117, 2, 0.3) !important;
+          }
+
+          &[class*="ring-arc-2"].highlight {
+            fill: rgba(232, 117, 2, 0.2) !important;
+          }
+
+          &[class*="ring-arc-3"].highlight {
+            fill: rgba(232, 117, 2, 0.1) !important;
+          }
+        }
+      }
+
+      &-third {
+        path {
+          &[class*="ring-arc-0"].highlight {
+            fill: rgba(9, 179, 123, 0.4) !important;
+          }
+
+          &[class*="ring-arc-1"].highlight {
+            fill: rgba(9, 179, 123, 0.3) !important;
+          }
+
+          &[class*="ring-arc-2"].highlight {
+            fill: rgba(9, 179, 123, 0.2) !important;
+          }
+
+          &[class*="ring-arc-3"].highlight {
+            fill: rgba(9, 179, 123, 0.1) !important;
+          }
+        }
+      }
+
+      &-fourth {
+        path {
+          &[class*="ring-arc-0"].highlight {
+            fill: rgba(235, 51, 51, 0.4) !important;
+          }
+
+          &[class*="ring-arc-1"].highlight {
+            fill: rgba(235, 51, 51, 0.3) !important;
+          }
+
+          &[class*="ring-arc-2"].highlight {
+            fill: rgba(235, 51, 51, 0.2) !important;
+          }
+
+          &[class*="ring-arc-3"].highlight {
+            fill: rgba(235, 51, 51, 0.1) !important;
+          }
+        }
+      }
     }
 
     .blip-link {

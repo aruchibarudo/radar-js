@@ -1,5 +1,5 @@
 /* eslint no-constant-condition: "off" */
-const api = require('../services/api');
+const api = require('../services/api')
 const d3 = require('d3')
 const _ = {
   map: require('lodash/map'),
@@ -27,42 +27,43 @@ const FileNotFoundError = require('../exceptions/fileNotFoundError')
 const { renderRadars } = require('../graphing/components/radarsList')
 
 function validateInputQuadrantOrRingName(allQuadrantsOrRings, quadrantOrRing) {
-  const quadrantOrRingNames = Object.keys(allQuadrantsOrRings)
   const regexToFixLanguagesAndFrameworks = /(-|\s+)(and)(-|\s+)|\s*(&)\s*/g
-  const formattedInputQuadrant = quadrantOrRing.toLowerCase().replace(regexToFixLanguagesAndFrameworks, ' & ')
-  return quadrantOrRingNames.find((quadrantOrRing) => quadrantOrRing.toLowerCase() === formattedInputQuadrant)
+  const formattedInput = quadrantOrRing.toLowerCase().replace(regexToFixLanguagesAndFrameworks, ' & ')
+
+  return Array.from(allQuadrantsOrRings.keys()).find(
+    (key) => key.toLowerCase() === formattedInput
+  )
 }
 
-const plotRadarGraph = function (title, blips, currentRadarName, alternativeRadars) {
+const plotRadarGraph = function ({ title, blips, radarName, alternativeRadars = [], quadrants = [], rings = [] }) {
   document.title = title.replace(/.(csv|json)$/, '')
-
   d3.selectAll('.loading').remove()
 
-  const ringMap = blips.reduce((allBlips, { quadrant, ring, ru }, index) => {
-    if (!allBlips[ring]) {
-      allBlips[ring] = new Ring(ring, index);
+  const ringsMap = rings.reduce((map, ring, index) => {
+    map.set(ring, new Ring(ring, index))
+    return map
+  }, new Map())
+
+  for (const { quadrant, ring, ru } of blips) {
+    const currentRing = ringsMap.get(ring)
+    if (currentRing && ru) {
+      currentRing.addRu(quadrant)
     }
+  }
 
-    if (ru) {
-      allBlips[ring].addRu(quadrant);
-    }
-
-    return allBlips;
-  }, {});
-
-  const quadrantsMap = blips.reduce((allQuadrants, { quadrant }) => {
-    allQuadrants[quadrant] = new Quadrant(quadrant)
-    return allQuadrants
-  }, {})
+  const quadrantsMap = quadrants.reduce((map, quadrant) => {
+    map.set(quadrant, new Quadrant(quadrant))
+    return map
+  }, new Map())
 
   blips.forEach((blip) => {
-    const currentQuadrant = validateInputQuadrantOrRingName(quadrantsMap, blip.quadrant)
-    const ring = validateInputQuadrantOrRingName(ringMap, blip.ring)
+    const quadrant = validateInputQuadrantOrRingName(quadrantsMap, blip.quadrant)
+    const ring = validateInputQuadrantOrRingName(ringsMap, blip.ring)
 
-    if (currentQuadrant && ring) {
+    if (quadrant && ring) {
       const blipObj = new Blip({
         name: blip.name,
-        ring: ringMap[ring],
+        ring: ringsMap.get(ring),
         isNew: blip.isNew.toLowerCase() === 'true',
         status: blip.status,
         topic: blip.topic,
@@ -70,22 +71,23 @@ const plotRadarGraph = function (title, blips, currentRadarName, alternativeRada
         isRu: blip.ru,
         probationResult: blip.probation_result,
       })
-      quadrantsMap[currentQuadrant].add(blipObj)
+
+      quadrantsMap.get(quadrant).add(blipObj)
     }
   })
 
   const radar = new Radar()
-  radar.addRings(Object.values(ringMap))
+  radar.addRings([...ringsMap.values()])
 
-  _.each(quadrantsMap, function (quadrant) {
+  quadrantsMap.forEach((quadrant) => {
     radar.addQuadrant(quadrant)
   })
 
-  alternativeRadars.forEach(function (sheetName) {
+  alternativeRadars.forEach((sheetName) => {
     radar.addAlternative(sheetName)
   })
 
-  radar.setCurrentSheet(currentRadarName)
+  radar.setCurrentSheet(radarName)
 
   const size = getGraphSize()
   new GraphingRadar(size, radar).init().plot()
@@ -111,15 +113,20 @@ const GoogleSheet = function (sheetReference, sheetName) {
       sheetName = sheetNames[0]
     }
     values.forEach(function () {
-      var contentValidator = new ContentValidator(values[0])
+      const contentValidator = new ContentValidator(values[0])
       contentValidator.verifyContent()
       contentValidator.verifyHeaders()
     })
 
     const all = values
     const header = all.shift()
-    var blips = _.map(all, (blip) => new InputSanitizer().sanitizeForProtectedSheet(blip, header))
-    plotRadarGraph(documentTitle, blips, sheetName, sheetNames)
+    const blips = _.map(all, (blip) => new InputSanitizer().sanitizeForProtectedSheet(blip, header))
+    plotRadarGraph({
+      title: documentTitle,
+      blips,
+      radarName: sheetName,
+      alternativeRadars: sheetNames
+    })
   }
 
   self.authenticate = function (force = false, apiKeyEnabled, callback) {
@@ -168,15 +175,19 @@ const CSVDocument = function (url) {
       })
   }
 
-  var createBlips = function (data) {
+  const createBlips = function (data) {
     try {
-      var columnNames = data.columns
+      const columnNames = data.columns
       delete data.columns
-      var contentValidator = new ContentValidator(columnNames)
+      const contentValidator = new ContentValidator(columnNames)
       contentValidator.verifyContent()
       contentValidator.verifyHeaders()
-      var blips = _.map(data, new InputSanitizer().sanitize)
-      plotRadarGraph(FileName(url), blips, 'CSV File', [])
+      const blips = _.map(data, new InputSanitizer().sanitize)
+      plotRadarGraph({
+        title: FileName(url),
+        blips,
+        radarName: 'CSV File'
+      })
     } catch (exception) {
       const invalidContentError = new InvalidContentError(ExceptionMessages.INVALID_CSV_CONTENT)
       plotErrorMessage(invalidContentError, 'csv')
@@ -203,15 +214,15 @@ const JSONFile = function (url) {
       })
   }
 
-  var createBlips = function (data) {
+  const createBlips = function (data) {
     try {
-      var columnNames = Object.keys(data[0])
-      var contentValidator = new ContentValidator(columnNames)
+      const columnNames = Object.keys(data[0])
+      const contentValidator = new ContentValidator(columnNames)
       contentValidator.verifyContent()
       contentValidator.verifyHeaders()
-      var blips = _.map(data, new InputSanitizer().sanitize)
+      const blips = _.map(data, new InputSanitizer().sanitize)
 
-      plotRadarGraph(FileName(url), blips, 'JSON File', [])
+      plotRadarGraph({ title: FileName(url), blips, radarName: 'JSON File' })
     } catch (exception) {
       const invalidContentError = new InvalidContentError(ExceptionMessages.INVALID_JSON_CONTENT)
       plotErrorMessage(invalidContentError, 'json')
@@ -233,20 +244,33 @@ const ApiData = function (id) {
     api.get(`/radar/${id}`)
       .then(data => createBlips(data))
       .catch(() => {
-        const fileNotFoundError = new FileNotFoundError(`Ошибка загрузки радара`)
+        const fileNotFoundError = new FileNotFoundError('Ошибка загрузки радара')
         plotErrorMessage(fileNotFoundError, 'json')
       })
   }
 
   const createBlips = function (data) {
+    if (!data.items.length) {
+      const invalidContentError = new InvalidContentError(ExceptionMessages.NO_ITEMS)
+      plotErrorMessage(invalidContentError, 'json')
+
+      return
+    }
+
     try {
       const columnNames = Object.keys(data.items[0])
       const contentValidator = new ContentValidator(columnNames)
       contentValidator.verifyContent()
       contentValidator.verifyHeaders()
-      var blips = _.map(data.items, new InputSanitizer().sanitize)
 
-      plotRadarGraph(data.name, blips, 'JSON Data', [])
+      const blips = _.map(data.items, new InputSanitizer().sanitize)
+
+      plotRadarGraph({
+        title: data.name,
+        blips,
+        quadrants: data.quadrants,
+        rings: data.rings
+      })
     } catch (exception) {
       const invalidContentError = new InvalidContentError(ExceptionMessages.INVALID_JSON_CONTENT)
       plotErrorMessage(invalidContentError, 'json')
@@ -353,7 +377,7 @@ function plotError(exception) {
   const errorContainer = container.append('div').attr('class', 'error-container__message')
   errorContainer.append('p').html(message)
 
-  document.querySelector('.helper-description > p').style.display = 'block'
+  document.querySelector('.helper-description p').style.display = 'block'
 }
 
 function showErrorMessage(exception, fileType) {

@@ -23,6 +23,9 @@ Object.entries(uiConfig).forEach(function ([key, value]) {
   scssVariables.push(`$${key}: ${value}px;`)
 })
 
+const KEY_PATH = process.env.KEY_PATH
+const CERT_PATH = process.env.CERT_PATH
+
 module.exports = merge(common, {
   mode: 'development',
   entry: { main: main },
@@ -72,12 +75,14 @@ module.exports = merge(common, {
   devtool: 'source-map',
   devServer: {
     port: process.env.PORT || 8000,
-    server: {
-      type: 'https',
-      options: {
-        key: fs.readFileSync(path.resolve(__dirname, process.env.KEY_PATH)),
-        cert: fs.readFileSync(path.resolve(__dirname, process.env.CERT_PATH)),
-      }
-    },
+    ...KEY_PATH && CERT_PATH && {
+      server: {
+        type: 'https',
+        options: {
+          key: fs.readFileSync(path.resolve(__dirname, KEY_PATH)),
+          cert: fs.readFileSync(path.resolve(__dirname, CERT_PATH)),
+        }
+      },
+    }
   }
 })

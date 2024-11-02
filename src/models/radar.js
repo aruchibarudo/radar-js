@@ -8,8 +8,8 @@ const Radar = function () {
   addingQuadrant = 0
   quadrants = [
     { order: 'first', startAngle: 0 },
-    { order: 'second', startAngle: -90 },
     { order: 'third', startAngle: 90 },
+    { order: 'second', startAngle: -90 },
     { order: 'fourth', startAngle: -180 },
   ]
   alternatives = []
