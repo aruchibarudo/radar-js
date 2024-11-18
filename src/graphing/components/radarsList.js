@@ -1,5 +1,7 @@
-const api = require('../../services/api');
 const d3 = require('d3')
+const api = require('../../services/api');
+const config = require('../../config')
+const { publicUrl } = config()
 
 const container = d3.select('#content');
 
@@ -8,7 +10,7 @@ const renderRadarsList = (radars) => {
 
   radars.forEach(radar => {
     const item = list.append('li');
-    item.append('a').attr('href', `/?id=${radar.id}`).text(radar.name);
+    item.append('a').attr('href', `${publicUrl}?id=${radar.id}`).text(radar.name);
     item.append('p').text(radar.description);
   });
 };

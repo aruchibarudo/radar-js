@@ -1,6 +1,5 @@
 const { merge } = require('webpack-merge')
 const webpack = require('webpack')
-const dotenv = require('dotenv');
 const path = require('path')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const postcssPresetEnv = require('postcss-preset-env')
@@ -10,10 +9,11 @@ const common = require('./webpack.common.js')
 const { graphConfig, uiConfig } = require('./src/graphing/config')
 const fs = require('fs')
 
-const main = ['./src/site.js']
-const scssVariables = []
+const config = require('./src/config')
+const { publicUrl } = config()
 
-dotenv.config({ path: path.resolve(__dirname, '.env.development') });
+const main = ['./src/site.js']
+const scssVariables = [`$publicUrl: '${publicUrl}';`]
 
 Object.entries(graphConfig).forEach(function ([key, value]) {
   scssVariables.push(`$${key}: ${value}px;`)
@@ -75,6 +75,12 @@ module.exports = merge(common, {
   devtool: 'source-map',
   devServer: {
     port: process.env.PORT || 8000,
+    // @todo: fix warnings
+    client: {
+      overlay: {
+        warnings: false,
+      }
+    },
     ...KEY_PATH && CERT_PATH && {
       server: {
         type: 'https',

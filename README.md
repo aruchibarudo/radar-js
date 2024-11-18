@@ -18,6 +18,7 @@ cp .env.example .env.production
 
 ### 3. Configure the Environment Variables
 
+- `PUBLIC_URL`: Public URL for assets and routes (optional)
 - `API_BASE_URL`: The URL of your backend API for development
 - `API_AUTH_TOKEN`: Auth bearer token in the `Authorization` header
 - `MIN_RU_RADARS`: Minimum number of Russian radars to be highlighted in a quadrant

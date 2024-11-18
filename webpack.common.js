@@ -7,9 +7,13 @@ const buildPath = path.resolve(__dirname, 'dist')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 
-const common = ['./src/common.js']
+const NODE_ENV = process.env.NODE_ENV;
+const dotenv = require('dotenv')
+dotenv.config({ path: path.resolve(__dirname, `.env.${NODE_ENV}`) })
+const config = require('./src/config')
+const { publicUrl } = config()
 
-const ASSET_PATH = process.env.ASSET_PATH || '/'
+const common = ['./src/common.js']
 
 const plugins = [
   new MiniCssExtractPlugin({ filename: '[name].[contenthash].css' }),
@@ -17,9 +21,12 @@ const plugins = [
     template: './src/index.html',
     chunks: ['main'],
     inject: 'body',
+    templateParameters: {
+      PUBLIC_URL: publicUrl,
+    },
   }),
   new Dotenv({
-    path: `./.env.${process.env.NODE_ENV}`,
+    path: `./.env.${NODE_ENV}`,
   }),
   // @todo: move to .env
   new webpack.DefinePlugin({
@@ -40,9 +47,10 @@ module.exports = {
   },
   output: {
     path: buildPath,
-    publicPath: ASSET_PATH,
+    publicPath: publicUrl,
     filename: '[name].[contenthash].js',
     assetModuleFilename: 'images/[name][ext]',
+    clean: true
   },
   resolve: {
     extensions: ['.js', '.ts'],
@@ -85,7 +93,7 @@ module.exports = {
     ],
   },
 
-  plugins: plugins,
+  plugins,
 
   devServer: {
     port: process.env.PORT || 8000
